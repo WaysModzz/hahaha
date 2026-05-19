@@ -3,106 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeminiXD - GitHub Page Emailer</title>
-    <!-- Framework Tailwind CSS buat tampilan HP anti kaku -->
+    <title>GitHub Client Sender (RISIKO TINGGI)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Memanggil library email otomatis via CDN browser -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md border border-slate-700">
-        <h2 class="text-2xl font-bold mb-1 text-cyan-400 flex items-center gap-2">
-            🛸 GitHub Form Sender 
-        </h2>
-        <p class="text-xs text-slate-400 mb-6">Serverless sender, jalan langsung lewat GitHub Pages lu.</p>
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md border border-rose-500/30">
+        <h2 class="text-2xl font-bold mb-1 text-rose-400">⚠️ GitHub Client Sender</h2>
+        <p class="text-xs text-slate-400 mb-6 font-mono text-amber-400">Peringatan: Metode ini membocorkan password di browser publik!</p>
 
-        <!-- Form Pengiriman -->
-        <form id="form-github" class="space-y-4">
-            
-            <!-- TARO ACCESS KEY LU DI SINI -->
-            <input type="hidden" name="access_key" value="f12a72c9-cd4a-40df-80c1-e8a7213d095f">
-            
-            <!-- Email Tujuan Fiksasi otomatis ke Support WA -->
-            <input type="hidden" name="subject" value="Laporan Teks Otomatis ke Support WhatsApp">
-            <input type="hidden" name="to_email" value="support.whatsapp.com">
-
-            <!-- Input Email Pengirim (Gmail Lu) -->
+        <form id="email-form" class="space-y-4">
+            <!-- Input Email Tujuan -->
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Email Pengirim</label>
-                <input type="email" name="email" required placeholder="email_lu@gmail.com" 
-                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors">
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Email Tujuan</label>
+                <input type="email" id="target" required placeholder="support.whatsapp.com" 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500 text-white">
             </div>
 
-            <!-- Input Isi Teks -->
+            <!-- Input Subjek -->
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Isi Pesan Teks</label>
-                <textarea name="message" rows="5" required placeholder="Tulis pesan teks laporan di sini..." 
-                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors resize-none"></textarea>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Subjek</label>
+                <input type="text" id="subject" required placeholder="Masukkan subjek" 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500 text-white">
             </div>
 
-            <!-- Anti-Spam Honeypot (Disembunyikan, Biar Bot Gak Bisa Nyepam Web Lu) -->
-            <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
+            <!-- Input Isi Pesan -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Isi Pesan</label>
+                <textarea id="message" rows="5" required placeholder="Tulis pesan teks lu di sini..." 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500 text-white resize-none"></textarea>
+            </div>
 
-            <!-- Tombol Kirim -->
-            <button type="submit" id="btn-kirim"
-                class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-2.5 px-4 rounded-lg text-sm transition-all shadow-lg shadow-cyan-500/20 active:scale-[0.98]">
-                Jebret Kirim Sekarang ⚡
+            <button type="submit" id="btn" class="w-full bg-rose-500 hover:bg-rose-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm transition-all">
+                Kirim via Client (Publik) 🔥
             </button>
         </form>
-
-        <!-- Elemen Status Response -->
-        <div id="status-box" class="mt-4 text-center text-sm font-medium p-3 rounded-lg hidden"></div>
+        <div id="status" class="mt-4 text-center text-sm font-medium p-3 rounded-lg hidden"></div>
     </div>
 
     <script>
-        const form = document.getElementById('form-github');
-        const btnKirim = document.getElementById('btn-kirim');
-        const statusBox = document.getElementById('status-box');
+        // DAFTAR AKUN DAN PASSWORD LU (TERLIHAT JELAS OLEH PUBLIK DI GITHUB)
+        const daftarAkun = [
+            { user: "ptpertamina626@gmail.com", pass: "ycsl bnxd kbqu xzgo" },
+            { user: "wayskingunband@gmail.com", pass: "iyan gyjs jyzv gqza" },
+            { user: "sendangkasa3@gmail.com", pass: "qswc extx upml xtlk" },
+            { user: "aditsukaff8@gmail.com", pass: "ozox mjsx wtzz padq" },
+            { user: "bandingg194@gmail.com", pass: "jhio tgut qafe fxor" },
+            { user: "mahjonggacor799@gmail.com", pass: "rqnb gkte kffz xjfv" },
+            { user: "ahmadigus878@gmail.com", pass: "dmcx uafg jgvb dmvn" }
+        ];
 
-        form.addEventListener('submit', function(e) {
+        document.getElementById('email-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
             
-            // Ubah tampilan tombol pas lagi loading
-            btnKirim.innerText = "Memproses di Server Web3... ⏳";
-            btnKirim.disabled = true;
-            statusBox.classList.add('hidden');
+            btn.innerText = "Mengirim... ⏳";
+            btn.disabled = true;
+            status.classList.add('hidden');
 
-            const formData = new FormData(form);
-            const object = Object.fromEntries(formData);
-            const json = JSON.stringify(object);
+            // Memilih acak akun dari list di atas langsung di browser
+            const akunTerpilih = daftarAkun[Math.floor(Math.random() * daftarAkun.length)];
 
-            // Kirim data secara background (AJAX Fetch) ke API Web3Forms
-            fetch('https://api.web3forms.com/submit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: json
-            })
-            .then(async (response) => {
-                let res = await response.json();
-                if (response.status == 200) {
-                    // Jika sukses tembus
-                    statusBox.innerText = "🚀 Mantap! Teks sukses terkirim ke email tujuan.";
-                    statusBox.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                    form.reset(); // Kosongin form lagi
-                } else {
-                    // Jika ada error dari API
-                    statusBox.innerText = "❌ Error: " + res.message;
-                    statusBox.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20";
-                }
-            })
-            .catch(error => {
-                // Jika koneksi internet lu mati/interupsi
-                statusBox.innerText = "❌ Gagal koneksi internet, bro!";
-                statusBox.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20";
-            })
-            .then(() => {
-                // Balikin tombol ke kondisi awal
-                btnKirim.innerText = "Jebret Kirim Sekarang ⚡";
-                btnKirim.disabled = false;
-                statusBox.classList.remove('hidden');
-            });
+            // Menggunakan library EmailJS (memerlukan inisialisasi user publik key/token mereka agar fungsi send bisa jalan di frontend)
+            // Catatan: Script browser murni tidak bisa kirim ke server SMTP tanpa perantara API token dari platform seperti EmailJS/Web3Forms.
+            
+            // CONTOH LOGIKA SIMULASI PENGIRIMAN DI FRONTEND:
+            console.log("Mengirim pesan menggunakan akun:", akunTerpilih.user);
+            
+            // Karena ini berjalan di GitHub Pages (Frontend), pengiriman langsung ke target email membutuhkan API Key publik dari layanan email wrapper.
+            // Tanpa itu, baris array akun di atas cuma jadi pajangan teks hiasan di browser dan gak bisa connect ke SMTP Gmail secara mandiri.
+            
+            status.innerText = `⚠️ Simulasi: Mencoba mengirim dari [${akunTerpilih.user}] ke [${document.getElementById('target').value}]. Kunci password terekspos di source code!`;
+            status.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20";
+            
+            btn.innerText = "Kirim via Client (Publik) 🔥";
+            btn.disabled = false;
+            status.classList.remove('hidden');
         });
     </script>
 </body>
