@@ -1,975 +1,109 @@
-const TelegramBot = require('node-telegram-bot-api');
-const axios = require('axios');
-const fs = require('fs');
-
-const token = '8500360693:AAFVx4CobmRyTvA_Nbe5-iM9LzrH3yJbTK4'; // GANTI TOKEN
-/*
-const bot = new TelegramBot(token, { polling: true });*/
-const bot = new TelegramBot(token, {
-    polling: true
-});
-
-bot.on('polling_error', (err) => {
-    console.log('POLL ERROR =>');
-    console.log(err);
-});
-
-bot.on('webhook_error', (err) => {
-    console.log('WEBHOOK ERROR =>');
-    console.log(err);
-});
-
-console.log("🔥 BOT IVAS AKTIF...");
-
-// ================= DATABASE =================
-if (!fs.existsSync('./groups.json')) {
-    fs.writeFileSync('./groups.json', JSON.stringify([]));
-}
-
-let allowedGroups = JSON.parse(fs.readFileSync('./groups.json', 'utf8'));
-
-// ================= PLATFORM =================
-
-const onlyws = { 
-    ivas_whatsapp: "whatsapp",
-    }
-
-const platforms = {
-    ivas_whatsapp: "whatsapp",
-    ivas_facebook: "facebook",
-    ivas_tiktok: "tiktok",
-    ivas_viber: "viber",
-    ivas_apple: "apple",
-    ivas_yango: "yango",
-    ivas_amazon: "amazon",
-    ivas_tinder: "tinder",
-    ivas_telegram: "telegram",
-    ivas_shein: "shein",
-    ivas_shopee: "shopee",
-    ivas_imo: "imo",
-    ivas_microsoft: "microsoft",
-    ivas_verify: "verify"
-};
-
-// ================= CEK ADMIN =================
-async function isAdmin(chatId, userId) {
-    try {
-        const member = await bot.getChatMember(chatId, userId);
-        return member.status === "administrator" || member.status === "creator";
-    } catch {
-        return false;
-    }
-}
-
-// ================= CONTROL PANEL =================
-function startMenu(chatId) {
-    const isRegistered = allowedGroups.includes(chatId);
-
-    return {
-caption: `「 BOT WS WAYSS 」
-
-( 🕊️) - Telegram || が作ったボットです。ボットを賢く責任を持って使用してください。ありがとうございます。 
-
-┌───「 Users°Bot 」─────⬡
-│⬡  📌 Status : ${isRegistered ? "✅ terdaftar" : "🔴 not registered yet"}
-└────────────────────────⬡
-
-┌───「 Informasi°Bot   」─────⬡
-│ 🤖 Bot dapat dimasukkan ke grup pribadi
-│ 👑 Jadikan bot sebagai admin
-│ ⚙️ Semua fitur akan berjalan optimal
-│ 🔗 Support berbagai platform otomatis
-└────────────────────────⬡
-
-┌───「 Feature°Bot   」─────⬡
-│ • /cekivas
-└────────────────────────⬡
-
-┌───「 Customer 」─────⬡
-│ 📩 Bantuan Owner
-│ 👤 @qkanjutt
-└────────────────────────⬡
-
-\`\`\`© BOT WS WAYSS\`\`\``,
-        options: {
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: "➕ Add Bot", callback_data: "btn_addbot" },
-                        { text: "🗑 Remove Bot", callback_data: "btn_removebot" }
-                    ],
-                    [
-                        
-                    ]
-                ]
-            }
-        }
-    };
-}
-
-// ================= MENU PLATFORM =================
-function platformMenu() {
-    return {
-        parse_mode: "Markdown",
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: "📱 WhatsApp", callback_data: "ivas_whatsapp" },
-                    { text: "📘 Facebook", callback_data: "ivas_facebook" }
-                ],
-                [
-                    { text: "🎵 TikTok", callback_data: "ivas_tiktok" },
-                    { text: "📞 Viber", callback_data: "ivas_viber" }
-                ],
-                [
-                    { text: "🍎 Apple", callback_data: "ivas_apple" },
-                    { text: "🛒 Amazon", callback_data: "ivas_amazon" }
-                ],
-                [
-                    { text: "🔥 Tinder", callback_data: "ivas_tinder" },
-                    { text: "🛍 Shopee", callback_data: "ivas_shopee" }
-                ],
-                [
-                    { text: "💄 Shein", callback_data: "ivas_shein" },
-                    { text: "💬 IMO", callback_data: "ivas_imo" }
-                ],
-                [
-                    { text: "🪟 Microsoft", callback_data: "ivas_microsoft" },
-                    { text: "✈️ Telegram", callback_data: "ivas_telegram" }
-                ],
-                [
-                    { text: "🚕 Yango", callback_data: "ivas_yango" },
-                    { text: "✅ Verify", callback_data: "ivas_verify" }
-                ],
-                [
-                    { text: "🔙 Kembali", callback_data: "back_start" }
-                ]
-            ]
-        }
-    };
-}
-
-// ================= STATS =================
-bot.onText(/\/stats/, async (msg) => {
-
-    const chatId = msg.chat.id;
-
-    try {
-
-        // loading
-        const loading = await bot.sendMessage(
-            chatId,
-            "⏳ Mengambil leaderboard..."
-        );
-
-        // ================= API =================
-        const response = await axios.get(
-            "http://ws.websocket.web.id/api/cekivas?platform=whatsapp"
-        );
-
-        // ================= DATA =================
-        const totalSms = response.data.total_found;
-        let results = response.data.results || [];
-
-        // ================= SORT TRAFFIC =================
-        // dari paling banyak -> paling kecil
-        results.sort((a, b) => b.count - a.count);
-
-        // ================= WIB =================
-        const now = new Date();
-
-        const tanggal = now.toLocaleDateString(
-            "id-ID",
-            {
-                timeZone: "Asia/Jakarta",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit"
-            }
-        );
-
-        const jam = now.toLocaleTimeString(
-            "id-ID",
-            {
-                timeZone: "Asia/Jakarta",
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
-
-        // ================= TEXT =================
-        let text = `🏆 *LEADERBOARD NEGARA*\n`;
-        text += `Kategori: Standart Meta Business\n`;
-        text += `Tanggal: ${tanggal}\n\n`;
-
-        // ================= TOP 10 =================
-        results.slice(0, 10).forEach((item, index) => {
-
-    const persen = (
-        (item.count / totalSms) * 100
-    ).toFixed(2);
-
-    // kategori otomatis
-    let kategori = "LOW";
-
-    if (persen >= 5)
-        kategori = "STD";
-
-    if (persen >= 15)
-        kategori = "HIGH";
-
-    text += `${index + 1}. ${item.country} - ${persen}% [${kategori}]\n`;
-
-});
-
-        // ================= FOOTER =================
-        text += `\n${totalSms}`;
-        text += `\nTerakhir diperbarui: ${jam} WIB`;
-
-        // ================= SEND =================
-        await bot.editMessageText(text, {
-            chat_id: chatId,
-            message_id: loading.message_id,
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {
-                            text: "🔄 Refresh",
-                            callback_data: "refresh_stats"
-                        }
-                    ]
-                ]
-            }
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        bot.sendMessage(
-            chatId,
-            "❌ Gagal mengambil leaderboard."
-        );
-    }
-});
-
-
- /*query) => {
-
-    const data = query.data;
-
-    // ================= ONLY CALLBACK =================
-    if (
-        data !== "stats_exclusive" &&
-        data !== "stats_standard" &&
-        data !== "stats_low"
-    ) return;
-
-    const chatId = query.message.chat.id;
-    const messageId = query.message.message_id;
-
-    try {
-
-        await bot.answerCallbackQuery(query.id, {
-            text: "⏳ Mengambil leaderboard..."
-        });
-
-        // ================= API =================
-        const response = await axios.get(
-            "http://ws.websocket.web.id/api/cekivas?platform=whatsapp"
-        );
-
-        // ================= DATA =================
-        const totalSms = response.data.total_found;
-        let results = response.data.results || [];
-
-        // ================= SORT TRAFFIC =================
-        results.sort((a, b) => b.count - a.count);
-
-        // ================= FILTER KATEGORI =================
-        let kategori = "";
-        let filtered = [];
-
-        // 🔥 HIGH TRAFFIC
-        if (data === "stats_exclusive") {
-
-            kategori = "Eksklusif Meta Business";
-
-            // negara dengan traffic tertinggi
-            filtered = results.filter(x => x.count >= 20);
-
-        }
-
-        // 📊 MID TRAFFIC
-        else if (data === "stats_standard") {
-
-            kategori = "Standart Meta Business";
-
-            // traffic sedang
-            filtered = results.filter(
-                x => x.count >= 5 && x.count < 20
-            );
-
-        }
-
-        // 📉 LOW TRAFFIC
-        else if (data === "stats_low") {
-
-            kategori = "Low Meta Business";
-
-            // traffic kecil
-            filtered = results.filter(x => x.count < 5);
-
-        }
-
-        // ================= TOTAL KATEGORI =================
-        const totalKategori = filtered.reduce(
-            (sum, item) => sum + item.count,
-            0
-        );
-
-        // ================= WAKTU WIB =================
-        const now = new Date();
-
-        const tanggal = now.toLocaleDateString(
-            "id-ID",
-            {
-                timeZone: "Asia/Jakarta",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit"
-            }
-        );
-
-        const jam = now.toLocaleTimeString(
-            "id-ID",
-            {
-                timeZone: "Asia/Jakarta",
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
-
-        // ================= TEXT =================
-        let text = `🏆 *LEADERBOARD NEGARA*\n`;
-        text += `Kategori: ${kategori}\n`;
-        text += `Tanggal: ${tanggal}\n\n`;
-
-        // ================= TOP 10 =================
-        filtered.slice(0, 10).forEach((item, index) => {
-
-            // persen dari total kategori
-            const persen = (
-                (item.count / totalKategori) * 100
-            ).toFixed(2);
-
-            text += `${index + 1}. ${item.country} - ${persen}%\n`;
-
-        });
-
-        // ================= FOOTER =================
-        text += `\n${totalKategori}`;
-        text += `\nTerakhir diperbarui: ${jam} WIB`;
-
-        // ================= EDIT MESSAGE =================
-        await bot.editMessageText(text, {
-            chat_id: chatId,
-            message_id: messageId,
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-
-                    [
-                        {
-                            text: "🔥 Eksklusif",
-                            callback_data: "stats_exclusive"
-                        },
-                        {
-                            text: "📊 Standart",
-                            callback_data: "stats_standard"
-                        }
-                    ],
-
-                    [
-                        {
-                            text: "📉 Low",
-                            callback_data: "stats_low"
-                        }
-                    ],
-
-                    [
-                        {
-                            text: "🔄 Refresh",
-                            callback_data: data
-                        }
-                    ]
-
-                ]
-            }
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        bot.answerCallbackQuery(query.id, {
-            text: "❌ Gagal mengambil leaderboard",
-            show_alert: true
-        });
-    }
-});           */
-/*
-bot.on("callback_query", async (query) => {
-
-    const data = query.data;
-
-    if (
-        data !== "stats_exclusive" &&
-        data !== "stats_standard" &&
-        data !== "stats_low"
-    ) return;
-
-    const chatId = query.message.chat.id;
-    const messageId = query.message.message_id;
-
-    try {
-
-        await bot.answerCallbackQuery(query.id, {
-            text: "⏳ Mengambil leaderboard..."
-        });
-
-        // ================= AMBIL CACHE/API =================
-        const apiData = await getStatsData();
-
-        let results = apiData.results || [];
-
-        if (!results.length) {
-
-            return bot.editMessageText(
-                "❌ Tidak ada data traffic.",
-                {
-                    chat_id: chatId,
-                    message_id: messageId
-                }
-            );
-        }
-
-        // ================= FILTER =================
-        let filtered = [];
-        let kategori = "";
-
-        // 🔥 EKSKLUSIF
-        if (data === "stats_exclusive") {
-
-            filtered = results.filter(
-                x => x.count >= 20
-            );
-
-            kategori = "Eksklusif Meta Business";
-        }
-
-        // 📊 STANDART
-        else if (data === "stats_standard") {
-
-            filtered = results.filter(
-                x => x.count >= 5 && x.count < 20
-            );
-
-            kategori = "Standart Meta Business";
-        }
-
-        // 📉 LOW
-        else if (data === "stats_low") {
-
-            filtered = results.filter(
-                x => x.count < 5
-            );
-
-            kategori = "Low Meta Business";
-        }
-
-        // ================= TOTAL =================
-        const totalKategori = filtered.reduce(
-            (sum, item) => sum + item.count,
-            0
-        );
-
-        // ================= SORT =================
-        filtered.sort((a, b) => b.count - a.count);
-
-        // ================= WIB =================
-        const now = new Date();
-
-        const tanggal = now.toLocaleDateString(
-            "id-ID",
-            {
-                timeZone: "Asia/Jakarta",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit"
-            }
-        );
-
-        const jam = now.toLocaleTimeString(
-            "id-ID",
-            {
-                timeZone: "Asia/Jakarta",
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
-
-        // ================= TEXT =================
-        let text = `🏆 *LEADERBOARD NEGARA*\n`;
-        text += `Kategori: ${kategori}\n`;
-        text += `Tanggal: ${tanggal}\n\n`;
-
-        // ================= TOP 10 =================
-        filtered.slice(0, 10).forEach((item, index) => {
-
-            const persen = (
-                (item.count / totalKategori) * 100
-            ).toFixed(2);
-
-            text += `${index + 1}. ${item.country} - ${persen}%\n`;
-
-        });
-
-        // ================= FOOTER =================
-        text += `\n${totalKategori}`;
-        text += `\nTerakhir diperbarui: ${jam} WIB`;
-        text += `\n\n♻️ Update setiap 1 menit`;
-
-        // ================= SEND =================
-        await bot.editMessageText(text, {
-            chat_id: chatId,
-            message_id: messageId,
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {
-                            text: "🔥 Eksklusif",
-                            callback_data: "stats_exclusive"
-                        },
-                        {
-                            text: "📊 Standart",
-                            callback_data: "stats_standard"
-                        }
-                    ],
-                    [
-                        {
-                            text: "📉 Low",
-                            callback_data: "stats_low"
-                        }
-                    ],
-                    [
-                        {
-                            text: "🔄 Refresh",
-                            callback_data: data
-                        }
-                    ]
-                ]
-            }
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        bot.answerCallbackQuery(query.id, {
-            text: "❌ Gagal mengambil leaderboard",
-            show_alert: true
-        });
-    }
-});
-*/
-        
-
-/*
-// ================= CALLBACK =================
-bot.on("callback_query", async (query) => {
-
-    const data = query.data;
-
-    if (
-        data !== "stats_exclusive" &&
-        data !== "stats_standard" &&
-        data !== "stats_low"
-    ) return;
-
-    const chatId = query.message.chat.id;
-    const messageId = query.message.message_id;
-
-    try {
-
-        await bot.answerCallbackQuery(query.id, {
-            text: "⏳ Mengambil leaderboard..."
-        });
-
-        // ================= API =================
-        const response = await axios.get(
-            "http://ws.websocket.web.id/api/cekivas?platform=whatsapp"
-        );
-
-        let results = response.data.results || [];
-        let totalSms = response.data.total_found || 0;
-
-        // sort terbesar
-        results.sort((a, b) => b.count - a.count);
-
-        // ================= FILTER =================
-        let filtered = [];
-        let kategori = "";
-
-        // HIGH TRAFFIC
-        if (data === "stats_exclusive") {
-
-            filtered = results.filter(x => x.count >= 20);
-            kategori = "Eksklusif Meta Business";
-
-        }
-
-        // MEDIUM TRAFFIC
-        else if (data === "stats_standard") {
-
-            filtered = results.filter(
-                x => x.count >= 5 && x.count < 20
-            );
-
-            kategori = "Standart Meta Business";
-
-        }
-
-        // LOW TRAFFIC
-        else if (data === "stats_low") {
-
-            filtered = results.filter(x => x.count < 5);
-            kategori = "Low Meta Business";
-        }
-
-        // kosong
-        if (filtered.length === 0) {
-
-            return bot.editMessageText(
-                "❌ Tidak ada data traffic.",
-                {
-                    chat_id: chatId,
-                    message_id: messageId
-                }
-            );
-        }
-
-        // ================= DATE =================
-        const now = new Date();
-
-        const tanggal =
-            now.getFullYear() + "-" +
-            String(now.getMonth() + 1).padStart(2, "0") + "-" +
-            String(now.getDate()).padStart(2, "0");
-
-        const jam =
-            String(now.getHours()).padStart(2, "0") + ":" +
-            String(now.getMinutes()).padStart(2, "0");
-
-        // ================= TEXT =================
-        let text = `🏆 *LEADERBOARD NEGARA*\n`;
-        text += `Kategori: ${kategori}\n`;
-        text += `Tanggal: ${tanggal}\n\n`;
-
-        filtered.slice(0, 10).forEach((item, index) => {
-
-            // ================= PERSEN =================
-            const persen = (
-                (item.count / totalSms) * 100
-            ).toFixed(2);
-
-            text += `${index + 1}. ${item.country} - ${persen}%\n`;
-
-        });
-
-        text += `\n📨 TOTAL SMS: ${totalSms}`;
-        text += `\n⏰ Terakhir diperbarui: ${jam} WIB`;
-
-        // ================= EDIT =================
-        await bot.editMessageText(text, {
-            chat_id: chatId,
-            message_id: messageId,
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {
-                            text: "🔥 Eksklusif",
-                            callback_data: "stats_exclusive"
-                        },
-                        {
-                            text: "📊 Standart",
-                            callback_data: "stats_standard"
-                        }
-                    ],
-                    [
-                        {
-                            text: "📉 Low",
-                            callback_data: "stats_low"
-                        }
-                    ],
-                    [
-                        {
-                            text: "🔄 Refresh",
-                            callback_data: data
-                        }
-                    ]
-                ]
-            }
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        bot.answerCallbackQuery(query.id, {
-            text: "❌ Gagal mengambil data",
-            show_alert: true
-        });
-    }
-});
-*/
-// ================= START =================
-bot.onText(/\/start/, (msg) => {
-
-    const chatId = msg.chat.id;
-
-    if (msg.chat.type !== "group" && msg.chat.type !== "supergroup")
-        return bot.sendMessage(chatId, "❌ Bot hanya bisa digunakan di grup!");
-
-    const menu = startMenu(chatId);
-
-    bot.sendPhoto(chatId, "./banner.png", {
-        caption: menu.caption,
-        ...menu.options
-    });
-});
-
-// ================= TRAFFIC WHATSAPP =================
-bot.onText(/\/cekivas/, async (msg) => {
-
-    const chatId = msg.chat.id;
-
-    try {
-
-        // loading
-        const loading = await bot.sendMessage(
-            chatId,
-            "⏳ Mengambil data..."
-        );
-
-        // fetch api
-        const response = await axios.get(
-            `http://ws.websocket.web.id/api/cekivas?platform=whatsapp`
-        );
-
-        // data
-        const totalFound = response.data.total_found || 0;
-        const results = response.data.results || [];
-
-        // sort terbesar
-        results.sort((a, b) => b.count - a.count);
-
-        // hasil text
-        let text = `┌─「 𖣂 CEK TRAFFIC IVASMS 」\n│\n`;
-
-        text += `│ TOTAL SMS : ${totalFound} SMS\n│ PLATFORM : WHATSAPP OTP ⏆\n│──────────⬡\n`;
-
-        results.slice(0, 40).forEach((item, index) => {
-
-            text += `│ ${index + 1}. ${item.country} : ${item.count} SMS\n`;
-
-        });
-
-        text += `│──────────⬡\n`;
-        text += `\n© BOT WS BY WAYSS`;
-
-        // edit message
-        const sent = await bot.editMessageText(text, {
-    chat_id: chatId,
-    message_id: loading.message_id
-});
-
-// auto delete 10 detik
-setTimeout(async () => {
-
-    try {
-
-        await bot.deleteMessage(
-            chatId,
-            sent.message_id || loading.message_id
-        );
-
-    } catch (e) {
-        console.log("Gagal hapus pesan");
-    }
-
-}, 10000);
-
-    } catch (err) {
-
-        console.log(err);
-
-        bot.sendMessage(
-            chatId,
-            "❌ Gagal mengambil data"
-        );
-    }
-});
-
-
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeminiXD - GitHub Page Emailer</title>
+    <!-- Framework Tailwind CSS buat tampilan HP anti kaku -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-xl w-full max-w-md border border-slate-700">
+        <h2 class="text-2xl font-bold mb-1 text-cyan-400 flex items-center gap-2">
+            🛸 GitHub Form Sender 
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">Serverless sender, jalan langsung lewat GitHub Pages lu.</p>
+
+        <!-- Form Pengiriman -->
+        <form id="form-github" class="space-y-4">
             
-// ================= CALLBACK =================
-bot.on('callback_query', async (query) => {
+            <!-- TARO ACCESS KEY LU DI SINI -->
+            <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE">
+            
+            <!-- Email Tujuan Fiksasi otomatis ke Support WA -->
+            <input type="hidden" name="subject" value="Laporan Teks Otomatis ke Support WhatsApp">
+            <input type="hidden" name="to_email" value="support.whatsapp.com">
 
-    const chatId = query.message.chat.id;
-    const data = query.data;
+            <!-- Input Email Pengirim (Gmail Lu) -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Email Pengirim</label>
+                <input type="email" name="email" required placeholder="email_lu@gmail.com" 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors">
+            </div>
 
-    // ===== ADD BOT =====
-    if (data === "btn_addbot") {
+            <!-- Input Isi Teks -->
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Isi Pesan Teks</label>
+                <textarea name="message" rows="5" required placeholder="Tulis pesan teks laporan di sini..." 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors resize-none"></textarea>
+            </div>
 
-        if (!allowedGroups.includes(chatId)) {
-            allowedGroups.push(chatId);
-            fs.writeFileSync('./groups.json', JSON.stringify(allowedGroups, null, 2));
-        }
+            <!-- Anti-Spam Honeypot (Disembunyikan, Biar Bot Gak Bisa Nyepam Web Lu) -->
+            <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
 
-        const menu = startMenu(chatId);
+            <!-- Tombol Kirim -->
+            <button type="submit" id="btn-kirim"
+                class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold py-2.5 px-4 rounded-lg text-sm transition-all shadow-lg shadow-cyan-500/20 active:scale-[0.98]">
+                Jebret Kirim Sekarang ⚡
+            </button>
+        </form>
 
-        return bot.editMessageCaption(menu.caption, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            ...menu.options
-        });
-    }
+        <!-- Elemen Status Response -->
+        <div id="status-box" class="mt-4 text-center text-sm font-medium p-3 rounded-lg hidden"></div>
+    </div>
 
-    // ===== REMOVE BOT (ADMIN ONLY) =====
-    if (data === "btn_removebot") {
+    <script>
+        const form = document.getElementById('form-github');
+        const btnKirim = document.getElementById('btn-kirim');
+        const statusBox = document.getElementById('status-box');
 
-        const admin = await isAdmin(chatId, query.from.id);
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Ubah tampilan tombol pas lagi loading
+            btnKirim.innerText = "Memproses di Server Web3... ⏳";
+            btnKirim.disabled = true;
+            statusBox.classList.add('hidden');
 
-        if (!admin) {
-            return bot.answerCallbackQuery(query.id, {
-                text: "❌ Hanya ADMIN yang bisa remove bot!",
-                show_alert: true
+            const formData = new FormData(form);
+            const object = Object.fromEntries(formData);
+            const json = JSON.stringify(object);
+
+            // Kirim data secara background (AJAX Fetch) ke API Web3Forms
+            fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: json
+            })
+            .then(async (response) => {
+                let res = await response.json();
+                if (response.status == 200) {
+                    // Jika sukses tembus
+                    statusBox.innerText = "🚀 Mantap! Teks sukses terkirim ke email tujuan.";
+                    statusBox.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    form.reset(); // Kosongin form lagi
+                } else {
+                    // Jika ada error dari API
+                    statusBox.innerText = "❌ Error: " + res.message;
+                    statusBox.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                }
+            })
+            .catch(error => {
+                // Jika koneksi internet lu mati/interupsi
+                statusBox.innerText = "❌ Gagal koneksi internet, bro!";
+                statusBox.className = "mt-4 text-center text-sm font-medium p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20";
+            })
+            .then(() => {
+                // Balikin tombol ke kondisi awal
+                btnKirim.innerText = "Jebret Kirim Sekarang ⚡";
+                btnKirim.disabled = false;
+                statusBox.classList.remove('hidden');
             });
-        }
-
-        allowedGroups = allowedGroups.filter(id => id !== chatId);
-        fs.writeFileSync('./groups.json', JSON.stringify(allowedGroups, null, 2));
-
-        const menu = startMenu(chatId);
-
-        return bot.editMessageCaption(menu.caption, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            ...menu.options
         });
-    }
-
-    // ===== BACK TO START =====
-    if (data === "back_start") {
-        const menu = startMenu(chatId);
-
-        return bot.editMessageCaption(menu.caption, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            ...menu.options
-        });
-    }
-
-    // ===== MENU IVAS =====
-    if (data === "menu_cektopivas") {
-
-        if (!allowedGroups.includes(chatId)) {
-            return bot.answerCallbackQuery(query.id, {
-                text: "❌ Grup belum terdaftar!",
-                show_alert: true
-            });
-        }
-
-        return bot.editMessageCaption("🔥 *PILIH PLATFORM CEK IVAS* 🔥", {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            ...platformMenu()
-        });
-    }
-
-    // ===== BACK MENU =====
-    if (data === "back_menu") {
-        return bot.editMessageCaption("🔥 *PILIH PLATFORM CEK IVAS* 🔥", {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            ...platformMenu()
-        });
-    }
-
-    // ===== REFRESH =====
-    if (data.startsWith("refresh_")) {
-        const platform = data.replace("refresh_", "");
-        return fetchData(platform, query);
-    }
-
-    // ===== PLATFORM =====
-    const platform = platforms[data];
-    if (platform) {
-        return fetchData(platform, query);
-    }
-
-});
-
-// ================= FETCH DATA =================
-async function fetchData(platform, query) {
-
-    const chatId = query.message.chat.id;
-
-    try {
-
-        await bot.answerCallbackQuery(query.id, { text: "⏳ Mengambil data..." });
-
-        const response = await axios.get(
-            `http://ws.websocket.web.id/api/cekivas?platform=${platform}`
-        );
-
-        const totalFound = response.data.total_found;
-        const results = response.data.results;
-
-        results.sort((a, b) => b.count - a.count);
-
-        let text = `*TRAFFIC SMS ${platform.toUpperCase()} IVASMS ANALYSIS*\n`;
-        text += `TOTAL SMS : ${totalFound} SMS\n\n`;
-
-        results.slice(0, 40).forEach((item, index) => {
-            text += `${index + 1}. *${item.country}* : ${item.count} SMS\n`;
-        });
-
-        text += `\n━━━━━━━━━━━━━━━━━━\n*BOT BY DEVIOR CODEXYS*`;
-
-        await bot.editMessageCaption(text, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: "🔄 Refresh", callback_data: `refresh_${platform}` },
-                        { text: "🔙 Kembali", callback_data: "back_menu" }
-                    ]
-                ]
-            }
-        });
-
-    } catch (err) {
-        bot.answerCallbackQuery(query.id, {
-            text: "❌ Gagal mengambil data",
-            show_alert: true
-        });
-    }
-}
+    </script>
+</body>
+</html>
